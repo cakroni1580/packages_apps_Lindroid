@@ -25,18 +25,15 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
-      - name: Install repo tool
+      - name: Install repo (stable)
         run: |
-          sudo apt update
-          sudo apt install -y git curl python3
+         sudo apt update
+         sudo apt install -y git curl python3
 
-          mkdir -p $HOME/bin
-          curl https://storage.googleapis.com/git-repo-downloads/repo > $HOME/bin/repo
-          chmod a+x $HOME/bin/repo
+         curl https://storage.googleapis.com/git-repo-downloads/repo -o /usr/local/bin/repo
+         chmod +x /usr/local/bin/repo
 
-          echo "$HOME/bin" >> $GITHUB_PATH
-
-          repo --version
+         repo --version        
       # =========================
       # SDK + NDK
       # =========================
