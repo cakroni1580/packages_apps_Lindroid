@@ -75,7 +75,6 @@ jobs:
             prebuilts/vndk/v30 \
             prebuilts/vndk/v31 \
             prebuilts/vndk/v32 \
-            prebuilts/vndk/v34 \
             system/core \
             system/libhidl \
             system/hwservicemanager \
