@@ -1,5 +1,5 @@
 android_app {
-    name: "LindroidUI",
+    name: "LindroidUI2",
     platform_apis: true,
     certificate: "platform",
     system_ext_specific: true,
