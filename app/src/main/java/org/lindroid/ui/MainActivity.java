@@ -24,7 +24,6 @@ import android.os.Bundle;
 import android.os.RemoteException;
 import android.util.Log;
 import android.os.IBinder;
-import android.os.ServiceManager;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.PointerIcon;
@@ -35,6 +34,7 @@ import android.view.View;
 import android.view.WindowInsets;
 import android.view.WindowInsetsController;
 import android.view.WindowManager;
+
 
 public class MainActivity extends AppCompatActivity
         implements SurfaceHolder.Callback, View.OnTouchListener,
