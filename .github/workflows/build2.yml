@@ -27,7 +27,13 @@ jobs:
         run: |
           curl https://storage.googleapis.com/git-repo-downloads/repo -o /usr/local/bin/repo
           chmod +x /usr/local/bin/repo
-
+          
+      - name: Free space before build
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /usr/local/lib/android
+          df -h
       # =========================
       # FULL AOSP TREE (MINIMAL USER BUILD)
       # =========================
@@ -88,12 +94,7 @@ jobs:
           cd $AOSP_ROOT
           m LindroidUI
 
-      - name: Free space before build
-        run: |
-          sudo rm -rf /usr/share/dotnet
-          sudo rm -rf /opt/ghc
-          sudo rm -rf /usr/local/lib/android
-          df -h    
+          
 
       # =========================
       # COLLECT OUTPUT
