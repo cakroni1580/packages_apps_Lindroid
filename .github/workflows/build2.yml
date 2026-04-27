@@ -84,7 +84,11 @@ jobs:
             system/libhidl \
             system/libhwbinder \
             system/hwservicemanager \
-            frameworks/native/libs/nativebase \
+            prebuilts/vndk/v30 \
+            prebuilts/vndk/v31 \
+            prebuilts/vndk/v32 \
+            system/extras \
+            frameworks/native \
             --force-sync --no-tags --no-clone-bundle
 
       # =========================
