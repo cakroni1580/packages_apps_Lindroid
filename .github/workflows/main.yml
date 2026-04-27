@@ -25,7 +25,18 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
+      - name: Install repo tool
+        run: |
+          sudo apt update
+          sudo apt install -y git curl python3
 
+          mkdir -p $HOME/bin
+          curl https://storage.googleapis.com/git-repo-downloads/repo > $HOME/bin/repo
+          chmod a+x $HOME/bin/repo
+
+          echo "$HOME/bin" >> $GITHUB_PATH
+
+          repo --version
       # =========================
       # SDK + NDK
       # =========================
@@ -79,7 +90,7 @@ jobs:
       # =========================
       - name: Build APK (NDK-only)
         run: |
-          unset ANDROID_HOME
+          export HOME
           export ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT
 
           chmod +x gradlew
