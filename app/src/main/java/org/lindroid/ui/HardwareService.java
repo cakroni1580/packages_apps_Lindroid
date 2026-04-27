@@ -1,6 +1,6 @@
 package org.lindroid.ui2;
 
-import static org.lindroid.ui.NativeLib.nativeInitInputDevice;
+import static org.lindroid.ui2.NativeLib.nativeInitInputDevice;
 
 import android.app.Service;
 import android.content.Intent;
