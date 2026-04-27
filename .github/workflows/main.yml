@@ -69,10 +69,21 @@ jobs:
 
           # ONLY SYSTEM CORE + BINDER + FRAMEWORK HEADERS (partial sync)
           repo sync -j$(nproc --all) \
+            prebuilts/ndk \
+            prebuilts/sdk \
+            prebuilts/tools \
+            prebuilts/vndk/v30 \
+            prebuilts/vndk/v31 \
+            prebuilts/vndk/v32 \
+            prebuilts/vndk/v34 \
             system/core \
+            system/libhidl \
+            system/hwservicemanager \
+            system/libhwbinder \
+            system/extras \
             frameworks/native \
             system/libbase \
-            system/libbinder \
+            system/logging \
             --force-sync --no-tags --no-clone-bundle
 
       # =========================
