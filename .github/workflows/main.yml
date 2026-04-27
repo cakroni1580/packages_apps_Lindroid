@@ -85,16 +85,20 @@ jobs:
       # =========================
       # VERIFY JNI PREBUILT
       # =========================
-      - name: Check JNI libs
+      - name: HARD FIX SDK CONFLICT
         run: |
-          ls -R app/src/main/jniLibs || true
+          echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
+
+          # MATIKAN SEMUA SDK ENV DI LEVEL GITHUB
+          echo "ANDROID_HOME=" >> $GITHUB_ENV
+          echo "ANDROID_SDK_HOME=" >> $GITHUB_ENV
+          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
 
       # =========================
       # BUILD APK ONLY
       # =========================
       - name: Build APK (NDK-only)
-        run: |
-          export HOME
+        run: |        
           export ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT
 
           chmod +x gradlew
