@@ -1,17 +1,17 @@
 package org.lindroid.ui2;
 
-import static org.lindroid.ui.KeyCodeConverter.convertKeyCode;
-import static org.lindroid.ui.NativeLib.nativeDisplayDestroyed;
-import static org.lindroid.ui.NativeLib.nativeKeyEvent;
-import static org.lindroid.ui.NativeLib.nativeTouchEvent;
-import static org.lindroid.ui.NativeLib.nativePointerButtonEvent;
-import static org.lindroid.ui.NativeLib.nativePointerMotionEvent;
-import static org.lindroid.ui.NativeLib.nativePointerScrollEvent;
-import static org.lindroid.ui.NativeLib.nativeReconfigureInputDevice;
-import static org.lindroid.ui.NativeLib.nativeStopInputDevice;
-import static org.lindroid.ui.NativeLib.nativeSurfaceChanged;
-import static org.lindroid.ui.NativeLib.nativeSurfaceCreated;
-import static org.lindroid.ui.NativeLib.nativeSurfaceDestroyed;
+import static org.lindroid.ui2.KeyCodeConverter.convertKeyCode;
+import static org.lindroid.ui2.NativeLib.nativeDisplayDestroyed;
+import static org.lindroid.ui2.NativeLib.nativeKeyEvent;
+import static org.lindroid.ui2.NativeLib.nativeTouchEvent;
+import static org.lindroid.ui2.NativeLib.nativePointerButtonEvent;
+import static org.lindroid.ui2.NativeLib.nativePointerMotionEvent;
+import static org.lindroid.ui2.NativeLib.nativePointerScrollEvent;
+import static org.lindroid.ui2.NativeLib.nativeReconfigureInputDevice;
+import static org.lindroid.ui2.NativeLib.nativeStopInputDevice;
+import static org.lindroid.ui2.NativeLib.nativeSurfaceChanged;
+import static org.lindroid.ui2.NativeLib.nativeSurfaceCreated;
+import static org.lindroid.ui2.NativeLib.nativeSurfaceDestroyed;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import androidx.annotation.NonNull;
