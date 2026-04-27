@@ -1,4 +1,4 @@
-name: Build LindroidUI (NDK + Partial AOSP Headers)
+name: Build LindroidUI (NDK + Partial AOSP Headers Clean)
 
 on:
   workflow_dispatch:
@@ -14,11 +14,14 @@ jobs:
       AOSP_ROOT: ${{ github.workspace }}/aosp
 
     steps:
-      - name: Checkout app source
+      # =========================
+      # SOURCE ONLY
+      # =========================
+      - name: Checkout App Source
         uses: actions/checkout@v4
 
       # =========================
-      # JDK
+      # JDK 17
       # =========================
       - name: Setup JDK 17
         uses: actions/setup-java@v4
@@ -27,18 +30,21 @@ jobs:
           java-version: 17
 
       # =========================
-      # basic tools
+      # BASIC TOOLING
       # =========================
-      - name: Install tools
+      - name: Install build tools
         run: |
           sudo apt update
           sudo apt install -y git curl python3 unzip wget
 
+      - name: Install repo tool
+        run: |
           curl https://storage.googleapis.com/git-repo-downloads/repo -o /usr/local/bin/repo
           chmod +x /usr/local/bin/repo
+          repo --version
 
       # =========================
-      # ANDROID SDK (ONLY FOR GRADLE)
+      # ANDROID SDK + NDK (UNCHANGED STYLE)
       # =========================
       - name: Setup Android SDK
         run: |
@@ -56,12 +62,13 @@ jobs:
           sdkmanager \
             "platform-tools" \
             "platforms;android-34" \
-            "build-tools;34.0.0"
+            "build-tools;34.0.0" \
+            "ndk;${ANDROID_NDK_VERSION}"
 
       # =========================
-      # PARTIAL AOSP (HEADERS ONLY MODE)
+      # MINIMAL AOSP HEADERS ONLY (FIXED MODEL)
       # =========================
-      - name: Init AOSP headers only
+      - name: Init Partial AOSP (HEADERS ONLY SAFE MODE)
         run: |
           mkdir -p $AOSP_ROOT
           cd $AOSP_ROOT
@@ -69,51 +76,39 @@ jobs:
           repo init -u https://android.googlesource.com/platform/manifest \
             -b android-14.0.0_r1 --depth=1
 
-          # STRICT MINIMAL HEADER SET (NO FULL BUILD TREE)
-          repo sync -j$(nproc --all) --no-tags --no-clone-bundle --force-sync \
-            system/core/include \
+          # ONLY HEADER-RELEVANT MODULES (NO FRAMEWORK FULL SYNC)
+          repo sync -j$(nproc --all) \
+            system/core \
             system/libbase \
             system/logging \
-            frameworks/native/include \
-            frameworks/native/libs/binder/include \
             system/libhidl \
-            system/libhwbinder
+            system/libhwbinder \
+            system/hwservicemanager \
+            frameworks/native/libs/binder \
+            frameworks/native/libs/nativebase \
+            --force-sync --no-tags --no-clone-bundle
 
       # =========================
-      # FORCE CLEAN BINDER ABI MODE
+      # FORCE CLEAN SDK LINK
       # =========================
-      - name: Setup AOSP include mapping
-        run: |
-          echo "AOSP_ROOT=$AOSP_ROOT" >> $GITHUB_ENV
-
-          mkdir -p app/src/main/cpp/include
-
-          # symlink headers ONLY (no libs linking)
-          ln -sf $AOSP_ROOT/system/core/include app/src/main/cpp/include/system_core
-          ln -sf $AOSP_ROOT/frameworks/native/include app/src/main/cpp/include/native
-          ln -sf $AOSP_ROOT/system/libbase/include app/src/main/cpp/include/libbase
-
-      # =========================
-      # HARD ISOLATION SDK vs AOSP
-      # =========================
-      - name: Isolate build environment
+      - name: Configure SDK Isolation
         run: |
           echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
 
-          # prevent hidden API leakage
-          unset ANDROID_HOME
-          unset ANDROID_SDK_HOME
+          echo "ANDROID_HOME=" >> $GITHUB_ENV
+          echo "ANDROID_SDK_HOME=" >> $GITHUB_ENV
+          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
 
       # =========================
-      # BUILD
+      # BUILD APK
       # =========================
-      - name: Build APK
+      - name: Build APK (NDK + JNI)
         run: |
           chmod +x gradlew
           ./gradlew clean assembleRelease --no-daemon
 
       # =========================
-      # OUTPUT
+      # COLLECT OUTPUT
       # =========================
       - name: Collect APK
         run: |
