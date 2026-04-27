@@ -23,12 +23,8 @@ cc_library {
     name: "libjni_lindroidui",
     system_ext_specific: true,
 
-    srcs: [
-        "cpp/native-lib.cpp",
-        "cpp/ComposerImpl.cpp",
-        "cpp/InputDevice.cpp",
-    ],
     shared_libs: [
+        "libjni_lindroidui",
         "libbase",
         "libbinder",
         "libbinder_ndk",
