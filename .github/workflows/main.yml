@@ -53,20 +53,15 @@ jobs:
             "ndk;${ANDROID_NDK_VERSION}"
 
       # =========================
-      # CHECK PREBUILT JNI
-      # =========================
-      - name: Verify JNI prebuilt
-        run: |
-          ls -R app/src/main/jniLibs || true
-          file app/src/main/jniLibs/arm64-v8a/libjni_lindroidui.so
-
-      # =========================
       # BUILD APK ONLY (NO AOSP, NO SOONG)
       # =========================
       - name: Build APK (NDK-only)
         run: |
-          chmod +x gradlew
-          ./gradlew clean assembleRelease --no-daemon
+         unset ANDROID_HOME
+         export ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT
+
+         chmod +x gradlew
+         ./gradlew clean assembleRelease --no-daemon
 
       # =========================
       # COLLECT OUTPUT
