@@ -24,6 +24,7 @@ import android.os.Bundle;
 import android.os.RemoteException;
 import android.util.Log;
 import android.os.IBinder;
+import android.os.ServiceManager;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.PointerIcon;
@@ -35,161 +36,54 @@ import android.view.WindowInsets;
 import android.view.WindowInsetsController;
 import android.view.WindowManager;
 
-public class MainActivity extends AppCompatActivity implements SurfaceHolder.Callback, View.OnTouchListener, View.OnHoverListener, View.OnGenericMotionListener {
-    private static final String TAG = "Lindroid";
-    private static final String mContainerName = "default";
-    private static final long DISPLAY_ID = 0;
-    private Object mPerspective;
+public class MainActivity extends AppCompatActivity
+        implements SurfaceHolder.Callback, View.OnTouchListener,
+        View.OnHoverListener, View.OnGenericMotionListener {
 
-    private static final String AIDL_SERVICE_NAME = "perspective";
+    private static final String TAG = "Lindroid";
+    private static final long DISPLAY_ID = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
         final WindowInsetsController controller = getWindow().getInsetsController();
         if (controller != null) {
             controller.hide(WindowInsets.Type.statusBars() | WindowInsets.Type.navigationBars());
-            controller.setSystemBarsBehavior(WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+            controller.setSystemBarsBehavior(
+                WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            );
         }
 
         if (!HardwareService.isInstanceCreated()) {
             startService(new Intent(this, HardwareService.class));
         }
+
         SurfaceView sv = findViewById(R.id.surfaceView);
         SurfaceHolder sh = sv.getHolder();
+
         sv.setOnTouchListener(this);
         sv.setOnHoverListener(this);
         sv.setOnGenericMotionListener(this);
         sh.addCallback(this);
 
-        // Hide pointer icon
         sv.setPointerIcon(PointerIcon.getSystemIcon(this, PointerIcon.TYPE_NULL));
 
-        // Get perspective service
-        IBinder binder = null;
-
-        try {
-            binder = (IBinder) Class
-                     .forName("android.os.ServiceManager")
-                     .getMethod("getService", String.class)
-                     .invoke(null, AIDL_SERVICE_NAME);
-       } catch (Exception e) {
-            Log.e(TAG, "ServiceManager reflection failed", e);
-       }
-
-       if (binder == null) {
-            Log.e(TAG, "Failed to get binder from ServiceManager");
-            new MaterialAlertDialogBuilder(this)
-                .setTitle("Unsupported System")
-                .setMessage("This system does not support Lindroid.")
-                .setPositiveButton(android.R.string.ok, (dialog, which) -> {
-                    dialog.dismiss();
-                    finish();
-                })
-                .setIcon(R.drawable.ic_warning)
-                .show();
-            return;
-        } else {
-            try {
-                mPerspective = Class
-                        .forName("vendor.lindroid.perspective.IPerspective$Stub")
-                        .getMethod("asInterface", IBinder.class)
-                        .invoke(null, binder);
-               } catch (Exception e) {
-                    Log.e(TAG, "Failed to create IPerspective proxy", e);
-               }
-        }
-
-        // Check if container is running
-        try {
-            boolean running = false;
-
-            try {
-                running = (boolean) mPerspective
-                          .getClass()
-                          .getMethod("isRunning", String.class)
-                          .invoke(mPerspective, mContainerName);
-               } catch (Exception e) {
-                    Log.e(TAG, "isRunning failed", e);
-               }
-
-               if (!running) {
-                new MaterialAlertDialogBuilder(this)
-                    .setTitle("Container isn't running")
-                    .setMessage("Lindroid container currently isnt running, do you want to start it?.")
-                    .setPositiveButton(android.R.string.ok, (dialog, which) -> {
-                        try {
-                            try {
-                                mPerspective.getClass()
-                                            .getMethod("start", String.class)
-                                            .invoke(mPerspective, mContainerName);
-                                } catch (Exception e) {
-                                    Log.e(TAG, "start failed", e);
-                                }
-                        } catch (Exception e) {
-                            Log.e(TAG, "Exception in start", e);
-                        }
-                    })
-                    .setNegativeButton(android.R.string.cancel, (dialog, which) -> {
-                    dialog.dismiss();
-                    finish();
-                    })
-                    .setIcon(R.drawable.ic_help)
-                    .show();
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "Exception in isRunning", e);
-        }
+        // ❌ perspective SERVICE REMOVED
+        // ❌ container check REMOVED
+        // langsung attach surface ke native display
     }
 
     @Override
     public void onBackPressed() {
-        try {
-            boolean running = false;
-
-            try {
-                 running = (boolean) mPerspective
-                           .getClass()
-                           .getMethod("isRunning", String.class)
-                           .invoke(mPerspective, mContainerName);
-                 } catch (Exception e) {
-                      Log.e(TAG, "isRunning failed", e);
-                 }
-
-                 if (running) {
-                new MaterialAlertDialogBuilder(this)
-                    .setTitle("Stop Linux subsystem")
-                    .setMessage("Do you want to stop Linux subsystem?")
-                    .setPositiveButton(R.string.yes, (dialog, which) -> {
-                        try {
-                            try {
-                                mPerspective.getClass()
-                                            .getMethod("stop", String.class)
-                                            .invoke(mPerspective, mContainerName);
-                                } catch (Exception e) {
-                                    Log.e(TAG, "stop failed", e);
-                                }
-                        } catch (Exception e) {
-                            Log.e(TAG, "Exception in start", e);
-                        }
-                        dialog.dismiss();
-                        finish();
-                    })
-                    .setNeutralButton(android.R.string.cancel, (dialog, which) -> {
-                        dialog.dismiss();
-                    })
-                    .setNegativeButton(R.string.no, (dialog, which) -> {
-                        super.onBackPressed();
-                    })
-                    .show();
-            } else {
-                finish();
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "Exception in isRunning", e);
-        }
+        // ❌ container stop logic REMOVED
+        finish();
     }
+}
+
+
+ 
 
     @Override
     protected void onDestroy() {
