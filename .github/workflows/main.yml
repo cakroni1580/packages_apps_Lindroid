@@ -102,7 +102,7 @@ jobs:
           export ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT
 
           chmod +x gradlew
-          ./gradlew clean assembleRelease --no-daemon
+          ./gradlew clean assembleRelease --no-daemon --stacktrace
 
       # =========================
       # COLLECT OUTPUT
