@@ -24,7 +24,6 @@ import android.os.Bundle;
 import android.os.RemoteException;
 import android.util.Log;
 import android.os.IBinder;
-import android.os.ServiceManager;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.PointerIcon;
@@ -36,13 +35,11 @@ import android.view.WindowInsets;
 import android.view.WindowInsetsController;
 import android.view.WindowManager;
 
-import vendor.lindroid.perspective.IPerspective;
-
 public class MainActivity extends AppCompatActivity implements SurfaceHolder.Callback, View.OnTouchListener, View.OnHoverListener, View.OnGenericMotionListener {
     private static final String TAG = "Lindroid";
     private static final String mContainerName = "default";
     private static final long DISPLAY_ID = 0;
-    private IPerspective mPerspective;
+    private Object mPerspective;
 
     private static final String AIDL_SERVICE_NAME = "perspective";
 
@@ -70,8 +67,18 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
         sv.setPointerIcon(PointerIcon.getSystemIcon(this, PointerIcon.TYPE_NULL));
 
         // Get perspective service
-        final IBinder binder = ServiceManager.getService(AIDL_SERVICE_NAME);
-        if (binder == null) {
+        IBinder binder = null;
+
+        try {
+            binder = (IBinder) Class
+                     .forName("android.os.ServiceManager")
+                     .getMethod("getService", String.class)
+                     .invoke(null, AIDL_SERVICE_NAME);
+       } catch (Exception e) {
+            Log.e(TAG, "ServiceManager reflection failed", e);
+       }
+
+       if (binder == null) {
             Log.e(TAG, "Failed to get binder from ServiceManager");
             new MaterialAlertDialogBuilder(this)
                 .setTitle("Unsupported System")
@@ -84,18 +91,42 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
                 .show();
             return;
         } else {
-            mPerspective = IPerspective.Stub.asInterface(binder);
+            try {
+                mPerspective = Class
+                        .forName("vendor.lindroid.perspective.IPerspective$Stub")
+                        .getMethod("asInterface", IBinder.class)
+                        .invoke(null, binder);
+               } catch (Exception e) {
+                    Log.e(TAG, "Failed to create IPerspective proxy", e);
+               }
         }
 
         // Check if container is running
         try {
-            if(!mPerspective.isRunning(mContainerName)) {
+            boolean running = false;
+
+            try {
+                running = (boolean) mPerspective
+                          .getClass()
+                          .getMethod("isRunning", String.class)
+                          .invoke(mPerspective, mContainerName);
+               } catch (Exception e) {
+                    Log.e(TAG, "isRunning failed", e);
+               }
+
+               if (!running) {
                 new MaterialAlertDialogBuilder(this)
                     .setTitle("Container isn't running")
                     .setMessage("Lindroid container currently isnt running, do you want to start it?.")
                     .setPositiveButton(android.R.string.ok, (dialog, which) -> {
                         try {
-                            mPerspective.start(mContainerName);
+                            try {
+                                mPerspective.getClass()
+                                            .getMethod("start", String.class)
+                                            .invoke(mPerspective, mContainerName);
+                                } catch (Exception e) {
+                                    Log.e(TAG, "start failed", e);
+                                }
                         } catch (RemoteException e) {
                             Log.e(TAG, "RemoteException in start", e);
                         }
@@ -115,13 +146,30 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
     @Override
     public void onBackPressed() {
         try {
-            if(mPerspective.isRunning(mContainerName)) {
+            boolean running = false;
+
+            try {
+                 running = (boolean) mPerspective
+                           .getClass()
+                           .getMethod("isRunning", String.class)
+                           .invoke(mPerspective, mContainerName);
+                 } catch (Exception e) {
+                      Log.e(TAG, "isRunning failed", e);
+                 }
+
+                 if (running) {
                 new MaterialAlertDialogBuilder(this)
                     .setTitle("Stop Linux subsystem")
                     .setMessage("Do you want to stop Linux subsystem?")
                     .setPositiveButton(R.string.yes, (dialog, which) -> {
                         try {
-                            mPerspective.stop(mContainerName);
+                            try {
+                                mPerspective.getClass()
+                                            .getMethod("stop", String.class)
+                                            .invoke(mPerspective, mContainerName);
+                                } catch (Exception e) {
+                                    Log.e(TAG, "stop failed", e);
+                                }
                         } catch (RemoteException e) {
                             Log.e(TAG, "RemoteException in start", e);
                         }
