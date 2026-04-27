@@ -23,6 +23,14 @@ android {
         density {
             enable false
         }
+        language {
+            enable false
+        }
+    }
+    bundle {
+        language {
+            enableSplit false
+        }
     }
 
     packaging {
