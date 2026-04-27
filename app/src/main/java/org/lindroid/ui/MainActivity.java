@@ -80,10 +80,6 @@ public class MainActivity extends AppCompatActivity
         // ❌ container stop logic REMOVED
         finish();
     }
-}
-
-
- 
 
     @Override
     protected void onDestroy() {
