@@ -1,0 +1,127 @@
+name: Build LindroidUI (NDK + Partial AOSP Headers)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 180
+
+    env:
+      ANDROID_NDK_VERSION: "26.1.10909125"
+      ANDROID_SDK_ROOT: ${{ github.workspace }}/android-sdk
+      AOSP_ROOT: ${{ github.workspace }}/aosp
+
+    steps:
+      - name: Checkout app source
+        uses: actions/checkout@v4
+
+      # =========================
+      # JDK
+      # =========================
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      # =========================
+      # basic tools
+      # =========================
+      - name: Install tools
+        run: |
+          sudo apt update
+          sudo apt install -y git curl python3 unzip wget
+
+          curl https://storage.googleapis.com/git-repo-downloads/repo -o /usr/local/bin/repo
+          chmod +x /usr/local/bin/repo
+
+      # =========================
+      # ANDROID SDK (ONLY FOR GRADLE)
+      # =========================
+      - name: Setup Android SDK
+        run: |
+          mkdir -p $ANDROID_SDK_ROOT/cmdline-tools
+          cd $ANDROID_SDK_ROOT
+
+          wget https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
+          unzip commandlinetools-linux-*.zip -d cmdline-tools
+          mv cmdline-tools/cmdline-tools cmdline-tools/latest
+
+          export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$PATH
+
+          yes | sdkmanager --licenses
+
+          sdkmanager \
+            "platform-tools" \
+            "platforms;android-34" \
+            "build-tools;34.0.0"
+
+      # =========================
+      # PARTIAL AOSP (HEADERS ONLY MODE)
+      # =========================
+      - name: Init AOSP headers only
+        run: |
+          mkdir -p $AOSP_ROOT
+          cd $AOSP_ROOT
+
+          repo init -u https://android.googlesource.com/platform/manifest \
+            -b android-14.0.0_r1 --depth=1
+
+          # STRICT MINIMAL HEADER SET (NO FULL BUILD TREE)
+          repo sync -j$(nproc --all) --no-tags --no-clone-bundle --force-sync \
+            system/core/include \
+            system/libbase \
+            system/logging \
+            frameworks/native/include \
+            frameworks/native/libs/binder/include \
+            system/libhidl \
+            system/libhwbinder
+
+      # =========================
+      # FORCE CLEAN BINDER ABI MODE
+      # =========================
+      - name: Setup AOSP include mapping
+        run: |
+          echo "AOSP_ROOT=$AOSP_ROOT" >> $GITHUB_ENV
+
+          mkdir -p app/src/main/cpp/include
+
+          # symlink headers ONLY (no libs linking)
+          ln -sf $AOSP_ROOT/system/core/include app/src/main/cpp/include/system_core
+          ln -sf $AOSP_ROOT/frameworks/native/include app/src/main/cpp/include/native
+          ln -sf $AOSP_ROOT/system/libbase/include app/src/main/cpp/include/libbase
+
+      # =========================
+      # HARD ISOLATION SDK vs AOSP
+      # =========================
+      - name: Isolate build environment
+        run: |
+          echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
+
+          # prevent hidden API leakage
+          unset ANDROID_HOME
+          unset ANDROID_SDK_HOME
+
+      # =========================
+      # BUILD
+      # =========================
+      - name: Build APK
+        run: |
+          chmod +x gradlew
+          ./gradlew clean assembleRelease --no-daemon
+
+      # =========================
+      # OUTPUT
+      # =========================
+      - name: Collect APK
+        run: |
+          mkdir -p out
+          find . -name "*.apk" -exec cp {} out/ \;
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: LindroidUI-APK
+          path: out
