@@ -1,4 +1,4 @@
-name: Build LindroidUI (AOSP Soong Only)
+name: Build LindroidUI (Gradle Only Clean)
 
 on:
   workflow_dispatch:
@@ -6,106 +6,85 @@ on:
 jobs:
   build:
     runs-on: ubuntu-22.04
-    timeout-minutes: 240
+    timeout-minutes: 120
 
     env:
-      AOSP_ROOT: ${{ github.workspace }}/aosp
+      ANDROID_NDK_VERSION: "26.1.10909125"
+      ANDROID_SDK_ROOT: ${{ github.workspace }}/android-sdk
 
     steps:
       # =========================
-      # DEPENDENCIES
+      # CHECKOUT
       # =========================
-      - name: Install deps
-        run: |
-          sudo apt update
-          sudo apt install -y git curl python3 openjdk-17-jdk unzip
+      - name: Checkout source
+        uses: actions/checkout@v4
 
       # =========================
-      # REPO TOOL
+      # JDK
       # =========================
-      - name: Install repo
-        run: |
-          curl https://storage.googleapis.com/git-repo-downloads/repo -o /usr/local/bin/repo
-          chmod +x /usr/local/bin/repo
-          
-      - name: Free space before build
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      # =========================
+      # FREE SPACE (penting di runner)
+      # =========================
+      - name: Free disk space
         run: |
           sudo rm -rf /usr/share/dotnet
           sudo rm -rf /opt/ghc
           sudo rm -rf /usr/local/lib/android
           df -h
+
       # =========================
-      # FULL AOSP TREE (MINIMAL USER BUILD)
+      # ANDROID SDK + NDK
       # =========================
-      - name: Init AOSP
+      - name: Setup Android SDK
         run: |
-          mkdir -p $AOSP_ROOT
-          cd $AOSP_ROOT
+          mkdir -p $ANDROID_SDK_ROOT/cmdline-tools
+          cd $ANDROID_SDK_ROOT
 
-          repo init -u https://android.googlesource.com/platform/manifest \
-            -b android-14.0.0_r1
+          wget https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
+          unzip commandlinetools-linux-*.zip -d cmdline-tools
+          mv cmdline-tools/cmdline-tools cmdline-tools/latest
 
-          repo sync -j2 \
-            system/core \
-            frameworks/base \
-            frameworks/native \
-            system/libbase \
-            system/logging \
-            system/hwservicemanager \
-            --force-sync
-            
+          export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$PATH
+
+          yes | sdkmanager --licenses
+
+          sdkmanager \
+            "platform-tools" \
+            "platforms;android-34" \
+            "build-tools;34.0.0" \
+            "ndk;${ANDROID_NDK_VERSION}"
 
       # =========================
-      # COPY APP INTO AOSP TREE
+      # FIX SDK PATH
       # =========================
-      - name: Inject LindroidUI module (Soong layout fix)
+      - name: Setup local.properties
         run: |
-          TARGET=$AOSP_ROOT/packages/apps/LindroidUI
+          echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
 
-          mkdir -p $TARGET
-
-          # Android.bp pindah ke root module
-          cp app/src/main/Android.bp $TARGET/
-
-          # Manifest
-          cp app/src/main/AndroidManifest.xml $TARGET/
-
-          # Java source
-          mkdir -p $TARGET/src/main/java
-          cp -r app/src/main/java/* $TARGET/src/main/java/
-
-          # Resources
-          mkdir -p $TARGET/src/main/res
-          cp -r app/src/main/res/* $TARGET/src/main/res/
       # =========================
-      # SETUP BUILD ENV
+      # BUILD APK
       # =========================
-      - name: Build env setup
+      - name: Build APK
         run: |
-          cd $AOSP_ROOT
-          source build/envsetup.sh
-          lunch aosp_arm64-eng
+          chmod +x gradlew
+          ./gradlew clean assembleRelease --no-daemon --stacktrace
 
       # =========================
-      # BUILD APK VIA SOONG
-      # =========================
-      - name: Build LindroidUI APK
-        run: |
-          cd $AOSP_ROOT
-          m LindroidUI
-
-          
-
-      # =========================
-      # COLLECT OUTPUT
+      # COLLECT APK
       # =========================
       - name: Collect APK
         run: |
           mkdir -p out
-          find $AOSP_ROOT/out -name "*.apk" -exec cp {} out/ \;
+          find . -name "*.apk" -exec cp {} out/ \;
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: LindroidUI-AOSP
+          name: LindroidUI-APK
           path: out
