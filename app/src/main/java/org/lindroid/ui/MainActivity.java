@@ -127,8 +127,8 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
                                 } catch (Exception e) {
                                     Log.e(TAG, "start failed", e);
                                 }
-                        } catch (RemoteException e) {
-                            Log.e(TAG, "RemoteException in start", e);
+                        } catch (Exception e) {
+                            Log.e(TAG, "Exception in start", e);
                         }
                     })
                     .setNegativeButton(android.R.string.cancel, (dialog, which) -> {
@@ -138,8 +138,8 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
                     .setIcon(R.drawable.ic_help)
                     .show();
             }
-        } catch (RemoteException e) {
-            Log.e(TAG, "RemoteException in isRunning", e);
+        } catch (Exception e) {
+            Log.e(TAG, "Exception in isRunning", e);
         }
     }
 
@@ -170,8 +170,8 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
                                 } catch (Exception e) {
                                     Log.e(TAG, "stop failed", e);
                                 }
-                        } catch (RemoteException e) {
-                            Log.e(TAG, "RemoteException in start", e);
+                        } catch (Exception e) {
+                            Log.e(TAG, "Exception in start", e);
                         }
                         dialog.dismiss();
                         finish();
@@ -186,8 +186,8 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
             } else {
                 finish();
             }
-        } catch (RemoteException e) {
-            Log.e(TAG, "RemoteException in isRunning", e);
+        } catch (Exception e) {
+            Log.e(TAG, "Exception in isRunning", e);
         }
     }
 
