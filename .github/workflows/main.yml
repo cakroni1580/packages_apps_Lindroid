@@ -70,7 +70,6 @@ jobs:
           # ONLY SYSTEM CORE + BINDER + FRAMEWORK HEADERS (partial sync)
           repo sync -j$(nproc --all) \
             prebuilts/ndk \
-            prebuilts/sdk \
             prebuilts/tools \
             prebuilts/vndk/v30 \
             prebuilts/vndk/v31 \
