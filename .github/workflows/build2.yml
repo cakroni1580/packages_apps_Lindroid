@@ -84,7 +84,6 @@ jobs:
             system/libhidl \
             system/libhwbinder \
             system/hwservicemanager \
-            frameworks/native/libs/binder \
             frameworks/native/libs/nativebase \
             --force-sync --no-tags --no-clone-bundle
 
