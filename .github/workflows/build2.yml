@@ -52,11 +52,24 @@ jobs:
       # =========================
       # COPY APP INTO AOSP TREE
       # =========================
-      - name: Inject LindroidUI module
+      - name: Inject LindroidUI module (FIXED STRUCTURE)
         run: |
-          mkdir -p $AOSP_ROOT/packages/apps/LindroidUI
-          cp -r ./* $AOSP_ROOT/packages/apps/LindroidUI
+          TARGET=$AOSP_ROOT/packages/apps/LindroidUI
 
+          mkdir -p $TARGET
+
+          # copy manifest
+          cp app/src/main/AndroidManifest.xml $TARGET/
+
+          # copy source java/kotlin
+          mkdir -p $TARGET/src
+          cp -r app/src/main/java $TARGET/src/
+
+          # copy resources
+          cp -r app/src/main/res $TARGET/
+
+          # copy Android.bp (harus sudah kamu siapkan di repo root)
+          cp Android.bp $TARGET/
       # =========================
       # SETUP BUILD ENV
       # =========================
