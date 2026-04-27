@@ -1,4 +1,4 @@
-package org.lindroid.ui;
+package org.lindroid.ui2;
 
 import static org.lindroid.ui.NativeLib.nativeInitInputDevice;
 
