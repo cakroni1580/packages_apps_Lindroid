@@ -17,15 +17,21 @@ jobs:
         uses: actions/checkout@v4
 
       # =========================
-      # JDK
+      # JDK 17 (FIX JAVA CLASS 61.0 ERROR)
       # =========================
-      - name: Install JDK
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Verify Java
         run: |
-          sudo apt update
-          sudo apt install -y openjdk-17-jdk unzip wget
+          java -version
+          echo "JAVA_HOME=$JAVA_HOME"
 
       # =========================
-      # Android SDK Commandline tools
+      # ANDROID SDK CLI
       # =========================
       - name: Setup Android SDK
         run: |
@@ -40,29 +46,30 @@ jobs:
 
           yes | sdkmanager --licenses
 
-          sdkmanager "platform-tools" \
-                     "platforms;android-34" \
-                     "build-tools;34.0.0" \
-                     "ndk;${ANDROID_NDK_VERSION}"
+          sdkmanager \
+            "platform-tools" \
+            "platforms;android-34" \
+            "build-tools;34.0.0" \
+            "ndk;${ANDROID_NDK_VERSION}"
 
       # =========================
-      # PREBUILT JNI CHECK
+      # CHECK PREBUILT JNI
       # =========================
-      - name: Verify JNI libs
+      - name: Verify JNI prebuilt
         run: |
           ls -R app/src/main/jniLibs || true
           file app/src/main/jniLibs/arm64-v8a/libjni_lindroidui.so
 
       # =========================
-      # GRADLE BUILD APK
+      # BUILD APK ONLY (NO AOSP, NO SOONG)
       # =========================
-      - name: Build APK (NDK only)
+      - name: Build APK (NDK-only)
         run: |
           chmod +x gradlew
           ./gradlew clean assembleRelease --no-daemon
 
       # =========================
-      # OUTPUT
+      # COLLECT OUTPUT
       # =========================
       - name: Collect APK
         run: |
