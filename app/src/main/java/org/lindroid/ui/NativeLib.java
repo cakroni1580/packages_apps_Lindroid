@@ -4,7 +4,7 @@ import android.view.Surface;
 
 public class NativeLib {
     static {
-        System.loadLibrary("jni_lindroidui");
+        System.load("/system_ext/lib64/libjni_lindroidui.so");
     }
 
     public static native void nativeStartComposerService();
